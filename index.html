@@ -11,11 +11,9 @@
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
         .chip-checkbox:checked + label { transform: scale(1.03); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
         .work-theme .chip-checkbox:checked + label { background-color: #eff6ff; border-color: #2563eb; color: #1d4ed8; font-weight: 700; }
         .restrict-theme .chip-checkbox:checked + label { background-color: #fef2f2; border-color: #dc2626; color: #b91c1c; font-weight: 700; }
-        
         .flatpickr-calendar { border-radius: 20px !important; border: 1px solid #e2e8f0 !important; font-family: 'Pretendard', sans-serif !important; }
         .flatpickr-day.selected { background: #0f172a !important; border-color: #0f172a !important; }
     </style>
@@ -110,7 +108,9 @@
         const project = urlParams.get('project') || "미지정 장소";
         const building = urlParams.get('building') || "";
         const type = urlParams.get('type') || "출입";
-        const mode = urlParams.get('mode') || "작업";
+        
+        // 💡 [수정] 깨질 우려가 있는 한글 대신 영문 식별자로 완벽한 기계 매칭 유도
+        const mode = urlParams.get('mode') || "work"; 
         const manager = urlParams.get('manager') || "";
 
         function formatSystemDateTime() {
@@ -118,7 +118,6 @@
             return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         }
 
-        // 💡 모바일 캐싱 현상을 타파하는 강력한 폼 강제 청소 로직 (Reset on Load)
         function clearAllInputs() {
             document.getElementById('w_name').value = "";
             document.getElementById('w_task').value = "";
@@ -130,7 +129,7 @@
         }
 
         window.onload = function() {
-            clearAllInputs(); // 1순위로 캐시 데이터 파괴
+            clearAllInputs();
 
             const badge = document.getElementById('badge');
             const titleText = document.getElementById('titleText');
@@ -139,7 +138,8 @@
 
             titleText.innerText = type === '출입' ? "현장 출입 등록" : "현장 퇴실 등록";
 
-            if (mode === '상시') {
+            // 💡 [수정] 영문 코드 분기 처리 매싱 완료
+            if (mode === 'restrict') {
                 bodyBg.className = "bg-rose-50/50 min-h-screen flex items-center justify-center p-4 transition-colors duration-500";
                 badge.innerText = "🚨 상시 통제구역";
                 badge.className = "px-3 py-1.5 rounded-full text-xs font-black bg-red-600 text-white shadow-sm";
@@ -149,7 +149,7 @@
                 submitBtn.className = "w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-red-200 active:scale-[0.98] transition-all duration-200";
             } else {
                 bodyBg.className = "bg-blue-50/50 min-h-screen flex items-center justify-center p-4 transition-colors duration-500";
-                badge.innerText = "👷 일반 작업";
+                badge.innerText = " Republic of Safety";
                 badge.className = "px-3 py-1.5 rounded-full text-xs font-black bg-blue-600 text-white shadow-sm";
                 document.getElementById('locationText').innerText = `🚧 현장: ${project}`;
                 document.getElementById('workModeForm').classList.remove('hidden');
@@ -177,11 +177,14 @@
             }
         }
 
+        // 문자 문자열 조합단은 기존 한글 체계 유지하여 관리자 파싱 안정성 영속 보장
+        def_mode = (mode === 'restrict') ? "상시" : "작업";
+
         function submitForm() {
             if(!manager) return alert("QR 코드 정보에 수신인 관리자 번호가 유실되었습니다.");
             let mmsBody = "";
 
-            if (mode === '작업') {
+            if (mode === 'work') {
                 const name = document.getElementById('w_name').value.trim();
                 const datetimeVal = document.getElementById('w_datetime_picker').value;
                 const task = document.getElementById('w_task').value.trim() || "-";
@@ -199,7 +202,7 @@
 
                 mmsBody = `[#@SYS_QR_작업${type}@#] 장소:${project} / 일시:${datetimeVal} / 공정:${task} / 건강:${healthFinal}`;
             } 
-            else if (mode === '상시') {
+            else if (mode === 'restrict') {
                 const guide = document.getElementById('r_guide').value.trim();
                 const reason = document.getElementById('r_reason').value.trim();
                 const currentSystemTime = formatSystemDateTime();
