@@ -1,0 +1,24 @@
+name: Build APK
+on:
+  push:
+    branches: [ "main" ] # 코드를 올리면 자동 실행
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer android debug
+          buildozer_version: master
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-APK
+          path: ${{ steps.buildozer.outputs.filename }}
