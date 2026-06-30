@@ -29,10 +29,19 @@
                 <span id="locationText">현장 정보 로딩 중...</span>
             </div>
             
-            <div class="mt-4 flex items-center space-x-3 bg-amber-50 border border-amber-200 p-3.5 rounded-2xl text-left break-keep">
-                <span class="text-2xl">📸</span>
-                <p class="text-xs text-amber-900 font-bold leading-relaxed">
-                    <span class="text-amber-700 font-black">[필독]</span> 다음 단계인 문자 전송창이 열리면, 작업에 필요한 <span class="underline decoration-2 text-amber-700">이수증을 첨부</span>하여 발송하세요. (사진은 1장만 등록 가능하며, 해당사항이 없으면 첨부 없이 전송하셔도 됩니다.)
+            <div class="mt-5 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-400 p-4 rounded-2xl text-left break-keep shadow-sm">
+                <div class="flex items-center space-x-2 mb-1.5">
+                    <span class="flex h-2 w-2 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    </span>
+                    <span class="bg-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">필독 지침</span>
+                </div>
+                <p class="text-sm text-slate-800 font-extrabold leading-relaxed">
+                    다음 단계에서 문자 전송창이 열리면, 반드시 <span class="text-amber-600 underline underline-offset-4 decoration-2">카메라 아이콘</span>을 눌러 <span class="text-slate-900 bg-amber-100 px-1 rounded">작업 이수증 사진 1장</span>을 첨부하여 발송해 주세요.
+                </p>
+                <p class="text-[11px] text-slate-500 font-medium mt-1.5 border-t border-amber-200/60 pt-1.5">
+                    ※ 해당사항이 없는 경우, 사진 첨부 없이 바로 전송하셔도 정상 처리됩니다.
                 </p>
             </div>
         </div>
@@ -85,7 +94,7 @@
             </div>
 
             <div>
-                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">인솔자명 (출입통제 책임자)</label>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">인솔자명 (출입통제자)</label>
                 <input type="text" id="r_guide" placeholder="인솔 책임자 성명을 입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-base font-bold outline-none focus:bg-white focus:ring-2 focus:ring-red-500 transition-all">
             </div>
 
@@ -200,7 +209,6 @@
                 if(otherHealth) healthArr.push(otherHealth);
                 const healthFinal = healthArr.length > 0 ? healthArr.join(', ') : "이상없음";
 
-                // 💡 백그라운드 파싱 정규식(이름:, 내용:) 규격 일치화
                 mmsBody = `[#@SYS_QR_작업${type}@#] 장소:${project} / 이름:${name} / 내용:${task} (시간:${datetimeVal}) / 건강:${healthFinal}`;
             } 
             else if (mode === 'restrict') {
@@ -214,8 +222,6 @@
                 if(!reason) return alert("보안구역 출입 사유를 상세히 입력하십시오.");
 
                 const buildPart = building ? `건물:${building} / ` : "";
-                
-                // 💡 상시 모드용 복합 데이터 결합 구조 (기존 백그라운드 파싱 구조 완벽 호환)
                 mmsBody = `[#@SYS_QR_상시${type}@#] ${buildPart}장소:${project} / 이름:${r_name} (인솔:${guide}) / 내용:${reason} (시간:${currentSystemTime}) / 건강:상시출입통제`;
             }
 
