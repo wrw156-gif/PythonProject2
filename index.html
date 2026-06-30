@@ -3,97 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스마트 현장 출입 시스템</title>
+    <title>스마트 현장 통제 시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .chip-checkbox:checked + label { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: 700; }
+        
+        /* 칩 선택 인터랙션 애니메이션 */
+        .chip-checkbox:checked + label { transform: scale(1.03); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+        .work-theme .chip-checkbox:checked + label { background-color: #eff6ff; border-color: #2563eb; color: #1d4ed8; font-weight: 700; }
+        .restrict-theme .chip-checkbox:checked + label { background-color: #fef2f2; border-color: #dc2626; color: #b91c1c; font-weight: 700; }
+        
+        /* 프리미엄 달력 커스텀 디자인 오버라이드 */
+        .flatpickr-calendar { border-radius: 20px !important; border: 1px solid #e2e8f0 !important; shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important; font-family: 'Pretendard', sans-serif !important; }
+        .flatpickr-day.selected { background: #0f172a !important; border-color: #0f172a !important; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 transition-colors duration-500" id="bodyBg">
 
-    <div class="bg-white w-full max-w-md rounded-3xl shadow-xl border border-slate-100 p-6 space-y-6">
-        <div class="text-center">
-            <span id="badge" class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600">인식 중...</span>
-            <h1 id="titleText" class="text-2xl font-extrabold text-slate-800 mt-2">현장 출입 등록</h1>
-            <p class="text-sm text-red-500 font-bold mt-2 bg-red-50 py-2 rounded-lg">📸 문자창이 열리면 [카메라] 아이콘을 눌러<br>반드시 사진을 첨부하세요!</p>
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 p-6 space-y-6 transition-all duration-300 transform">
+        
+        <div class="text-center border-b border-slate-100 pb-5">
+            <span id="badge" class="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">인식 중...</span>
+            <h1 id="titleText" class="text-2xl font-black text-slate-800 mt-3 tracking-tight">출입 등록 시스템</h1>
+            <div id="locationWrapper" class="mt-2 inline-flex items-center space-x-1.5 bg-slate-50 px-3 py-1 rounded-xl text-sm font-semibold text-slate-600 border border-slate-100">
+                <span id="locationText">현장 정보 로딩 중...</span>
+            </div>
+            
+            <div class="mt-4 flex items-center space-x-2.5 bg-amber-50 border border-amber-200 p-3 rounded-2xl text-left">
+                <span class="text-xl">📸</span>
+                <p class="text-xs text-amber-800 font-bold leading-relaxed">
+                    [필독] 다음 단계인 문자 전송창이 열리면, 반드시 <span class="text-amber-600 underline">카메라 아이콘</span>을 눌러 본인 사진을 첨 be하여 발송하세요!
+                </p>
+            </div>
         </div>
 
-        <div class="space-y-4">
+        <div id="workModeForm" class="space-y-4 hidden work-theme">
             <div>
-                <label id="nameLabel" class="block text-sm font-bold text-slate-700 mb-1">성명 (또는 인솔자명)</label>
-                <input type="text" id="workerName" placeholder="실명을 입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-lg font-bold focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none">
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">작업자 성명</label>
+                <input type="text" id="w_name" placeholder="실명을 입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-base font-bold outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 border-slate-200 transition-all">
             </div>
-
+            
             <div>
-                <label id="contentLabel" class="block text-sm font-bold text-slate-700 mb-1">내용 입력</label>
-                <input type="text" id="contentInput" placeholder="입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none">
-            </div>
-
-            <div id="healthSection">
-                <label class="block text-sm font-bold text-slate-700 mb-2">고위험군 체크 (중복 선택 가능)</label>
-                <div class="flex flex-wrap gap-2">
-                    <input type="checkbox" id="h1" value="고혈압" class="chip-checkbox hidden">
-                    <label for="h1" class="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 cursor-pointer transition-colors">고혈압</label>
-                    
-                    <input type="checkbox" id="h2" value="당뇨" class="chip-checkbox hidden">
-                    <label for="h2" class="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 cursor-pointer transition-colors">당뇨</label>
-                    
-                    <input type="checkbox" id="h3" value="심혈관" class="chip-checkbox hidden">
-                    <label for="h3" class="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 cursor-pointer transition-colors">심혈관질환</label>
-                    
-                    <input type="checkbox" id="h4" value="고령자" class="chip-checkbox hidden">
-                    <label for="h4" class="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 cursor-pointer transition-colors">고령(55세 이상)</label>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">작업 일시 선택 (달력+시간)</label>
+                <div class="relative">
+                    <input type="text" id="w_datetime_picker" placeholder="날짜와 시간을 선택하세요" readonly class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-base font-bold outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+                    <span class="absolute right-4 top-3.5 text-slate-400 pointer-events-none">📅</span>
                 </div>
             </div>
 
-            <button onclick="generateAndSend()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-extrabold text-lg hover:bg-slate-800 shadow-lg active:scale-[0.98] transition-transform">
-                문자창 열기 (사진첨부 단계)
-            </button>
+            <div>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">오늘의 작업 유형 (수기)</label>
+                <input type="text" id="w_task" placeholder="예: 3층 외벽 거푸집 조립" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-sm font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all">
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">고위험군 신체 상태 체크</label>
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <input type="checkbox" id="h1" value="고혈압" class="chip-checkbox hidden">
+                    <label for="h1" class="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 cursor-pointer transition-all border border-slate-200 hover:bg-slate-50">고혈압</label>
+                    
+                    <input type="checkbox" id="h2" value="당뇨" class="chip-checkbox hidden">
+                    <label for="h2" class="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 cursor-pointer transition-all border border-slate-200 hover:bg-slate-50">당뇨</label>
+                    
+                    <input type="checkbox" id="h_other_check" value="기타" class="chip-checkbox hidden" onchange="toggleOtherHealth(this)">
+                    <label for="h_other_check" class="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 cursor-pointer transition-all border border-slate-200 hover:bg-slate-50">기타 질환 (직접입력)</label>
+                </div>
+                <input type="text" id="w_health_other" placeholder="겪고 계신 신체 이상 증상을 수기 입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-sm font-semibold outline-none hidden focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all">
+            </div>
         </div>
+
+        <div id="restrictModeForm" class="space-y-4 hidden restrict-theme">
+            <div>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">인솔자 성명 (출입 통제 책임자)</label>
+                <input type="text" id="r_guide" placeholder="책임 인솔자 성명을 입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-base font-bold outline-none focus:bg-white focus:ring-2 focus:ring-red-500 border-slate-200 transition-all">
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">입퇴실 인증 시각 (보안 자동 잠금)</label>
+                <div class="relative">
+                    <input type="text" id="r_datetime_display" readonly class="w-full bg-slate-100 border border-slate-200 px-4 py-3.5 rounded-2xl text-base font-bold text-slate-500 cursor-not-allowed">
+                    <span class="absolute right-4 top-3.5 text-slate-400">🔒</span>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">보안구역 출입 사유 (필수)</label>
+                <input type="text" id="r_reason" placeholder="예: 발전기실 소방점검" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-sm font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-red-500 transition-all">
+            </div>
+        </div>
+
+        <button onclick="submitForm()" id="submitBtn" class="w-full text-white py-4.5 rounded-2xl font-black text-lg shadow-xl active:scale-[0.98] transition-all duration-200 py-4">
+            출입 데이터 매칭 및 문자 전송
+        </button>
     </div>
 
     <script>
+        // 파라미터 안전 주입
         const urlParams = new URLSearchParams(window.location.search);
-        const project = urlParams.get('project') || "미지정";
+        const project = urlParams.get('project') || "미지정 장소";
+        const building = urlParams.get('building') || "";
         const type = urlParams.get('type') || "출입";
         const mode = urlParams.get('mode') || "작업";
         const manager = urlParams.get('manager') || "";
 
-        // 화면 동적 세팅
-        const badge = document.getElementById('badge');
-        badge.innerText = `${project} · ${mode === '상시' ? '🚨통제구역' : '👷일반작업'}`;
-        badge.className = mode === '상시' ? "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700" : "px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700";
-        document.getElementById('titleText').innerText = type === '출입' ? "출입 등록" : "퇴실 등록";
-
-        if(mode === '상시') {
-            document.getElementById('contentLabel').innerText = "출입 사유 (필수)";
-            document.getElementById('contentInput').placeholder = "예: 밸브 점검, 누전 확인";
-            document.getElementById('healthSection').style.display = 'none'; // 상시모드는 건강체크 숨김
-        } else {
-            document.getElementById('contentLabel').innerText = "오늘의 공정 (수기)";
-            document.getElementById('contentInput').placeholder = "예: 3층 철근 배근";
+        // 포맷팅 함수 정의
+        function formatSystemDateTime() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mi = String(now.getMinutes()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
         }
 
-        function generateAndSend() {
-            const worker = document.getElementById('workerName').value.trim();
-            const content = document.getElementById('contentInput').value.trim() || "-";
-            
-            if(!worker) return alert("성명(인솔자명)을 입력해주세요.");
-            if(mode === '상시' && content === "-") return alert("출입 사유를 입력해주세요.");
-            if(!manager) return alert("QR 코드 오류: 관리자 번호가 없습니다.");
+        // 초기 동적 UI 오케스트레이션
+        window.onload = function() {
+            const badge = document.getElementById('badge');
+            const titleText = document.getElementById('titleText');
+            const submitBtn = document.getElementById('submitBtn');
+            const bodyBg = document.getElementById('bodyBg');
 
-            let health = "해당없음";
-            if(mode === '작업') {
+            titleText.innerText = type === '출입' ? "현장 출입 등록" : "현장 퇴실 등록";
+
+            if (mode === '상시') {
+                // 🚨 상시 보안 통제 모드 빌드
+                bodyBg.className = "bg-rose-50/50 min-h-screen flex items-center justify-center p-4 transition-colors duration-500";
+                badge.innerText = "🚨 상시 통제구역";
+                badge.className = "px-3 py-1.5 rounded-full text-xs font-black bg-red-600 text-white shadow-sm";
+                document.getElementById('locationText').innerText = building ? `🏢 ${building} ➔ 📍 ${project}` : `📍 ${project}`;
+                
+                document.getElementById('restrictModeForm').classList.remove('hidden');
+                document.getElementById('r_datetime_display').value = formatSystemDateTime() + " (자동 고정)";
+                
+                submitBtn.className = "w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-red-200 active:scale-[0.98] transition-all duration-200";
+            } else {
+                // 🚧 일반 공정 작업 모드 빌드
+                bodyBg.className = "bg-blue-50/50 min-h-screen flex items-center justify-center p-4 transition-colors duration-500";
+                badge.innerText = " Republic of Safety";
+                badge.className = "px-3 py-1.5 rounded-full text-xs font-black bg-blue-600 text-white shadow-sm";
+                document.getElementById('locationText').innerText = `🚧 현장: ${project}`;
+                
+                document.getElementById('workModeForm').classList.remove('hidden');
+                submitBtn.className = "w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-slate-300 active:scale-[0.98] transition-all duration-200";
+
+                // Premium Flatpickr 달력+시간 컴포넌트 구동
+                flatpickr("#w_datetime_picker", {
+                    locale: "ko",
+                    enableTime: true,
+                    time_24hr: true,
+                    dateFormat: "Y-m-d H:i",
+                    defaultDate: new Date(),
+                    disableMobile: "true" // 모바일 순정 피커 강제 비활성화 후 프리미엄 테마 적용
+                });
+            }
+        };
+
+        // 기타 신체이상 수기 창 애니메이션 처리
+        function toggleOtherHealth(target) {
+            const otherInput = document.getElementById('w_health_other');
+            if (target.checked) {
+                otherInput.classList.remove('hidden');
+                otherInput.focus();
+            } else {
+                otherInput.classList.add('hidden');
+                otherInput.value = "";
+            }
+        }
+
+        // 최종 폼 검증 및 시크릿 인크립트 메시지 조합
+        function submitForm() {
+            if(!manager) return alert("QR 코드 정보에 수신인 관리자 번호가 유실되었습니다.");
+            let mmsBody = "";
+
+            if (mode === '작업') {
+                const name = document.getElementById('w_name').value.trim();
+                const datetimeVal = document.getElementById('w_datetime_picker').value;
+                const task = document.getElementById('w_task').value.trim() || "-";
+                
+                if(!name) return alert("작업자 성명을 입력하십시오.");
+                if(!datetimeVal) return alert("작업 달력에서 날짜와 시간을 선택하십시오.");
+
                 const healthArr = [];
-                document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => healthArr.push(cb.value));
-                if(healthArr.length > 0) health = healthArr.join(', ');
+                document.querySelectorAll('.chip-checkbox:checked').forEach(cb => {
+                    if(cb.value !== '기타') healthArr.push(cb.value);
+                });
+                const otherHealth = document.getElementById('w_health_other').value.trim();
+                if(otherHealth) healthArr.push(otherHealth);
+                const healthFinal = healthArr.length > 0 ? healthArr.join(', ') : "이상없음";
+
+                // [최종 기계용 정형화 암호 빌드 - 작업]
+                mmsBody = `[#@SYS_QR_작업${type}@#] 장소:${project} / 일시:${datetimeVal} / 공정:${task} / 건강:${healthFinal}`;
+            } 
+            else if (mode === '상시') {
+                const guide = document.getElementById('r_guide').value.trim();
+                const reason = document.getElementById('r_reason').value.trim();
+                const currentSystemTime = formatSystemDateTime();
+                
+                if(!guide) return alert("책임 인솔자 성명을 입력하십시오.");
+                if(!reason) return alert("보안구역 출입 사유를 상세히 입력하십시오.");
+
+                // [최종 기계용 정형화 암호 빌드 - 상시]
+                const buildPart = building ? `건물:${building} / ` : "";
+                mmsBody = `[#@SYS_QR_상시${type}@#] ${buildPart}장소:${project} / 일시:${currentSystemTime} / 사유:${reason} / 인솔:${guide}`;
             }
 
-            // 💡 완벽한 보안 식별자 조립
-            const smsBody = `[#@SYS_QR_${mode}${type}@#] 현장: ${project} / 이름: ${worker} / 내용: ${content} / 건강: ${health}`;
-            window.location.href = `sms:${manager}?body=${encodeURIComponent(smsBody)}`;
+            // 기기 기본 본문 전송창 연동
+            window.location.href = `sms:${manager}?body=${encodeURIComponent(mmsBody)}`;
         }
     </script>
 </body>
