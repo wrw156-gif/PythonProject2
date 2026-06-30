@@ -5,7 +5,7 @@ package.domain = org.test
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,ttf
 version = 1.0
-requirements = python3, kivy==2.3.0, android, pyjnius
+requirements = python3, kivy==2.3.0, android, pyjnius, sqlite3
 android.permissions = RECEIVE_SMS, READ_SMS, RECEIVE_WAP_PUSH, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, FOREGROUND_SERVICE, POST_NOTIFICATIONS
 services = smsservice:service.py
 android.api = 33
