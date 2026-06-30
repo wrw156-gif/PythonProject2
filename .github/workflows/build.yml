@@ -12,15 +12,16 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11 (버전 충돌 방지)
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # 💡 [핵심 패치] Kivy 압축에 필요한 SDL2 그래픽 부품 모조리 추가
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libltdl-dev libffi-dev libssl-dev python3-dev python3-pip openjdk-17-jdk zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake
+          sudo apt-get install -y build-essential libltdl-dev libffi-dev libssl-dev python3-dev python3-pip openjdk-17-jdk zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
           pip install --user --upgrade buildozer cython==0.29.33 virtualenv
 
       - name: Build APK (자동 약관 동의)
