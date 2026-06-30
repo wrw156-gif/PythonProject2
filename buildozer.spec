@@ -15,7 +15,7 @@ android.minapi = 21
 android.ndk = 25b
 android.sdk = 33
 android.accept_sdk_license = True
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a
 android.allow_backup = True
 
 # python-for-android 고정 (hostpython 3.11 → Cython 0.29.33 호환)
