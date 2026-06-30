@@ -12,6 +12,12 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
+      # 💡 [핵심 해결책] 호환성이 가장 완벽한 파이썬 3.11 버전으로 강제 고정!
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: 1. 코랩과 동일한 최신 엔진 및 부품 설치
         run: |
           sudo apt-get update
@@ -21,7 +27,6 @@ jobs:
       - name: 2. 안드로이드 APK 압축 (자동 약관 동의 적용)
         run: |
           export PATH=$PATH:~/.local/bin
-          # 💡 구글 약관 동의창이 뜨면 로봇이 무조건 'yes'를 입력하도록 yes | 를 추가했습니다!
           yes | buildozer android debug
 
       - name: 3. 완성된 APK 파일 배달
