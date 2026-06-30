@@ -1,24 +1,30 @@
 name: Build APK
+
 on:
   push:
-    branches: [ "main" ] # 코드를 올리면 자동 실행
+    branches: [ "main" ]
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # 💡 가장 안정적인 리눅스 서버 지정
+
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: master
+      - name: 1. 코랩과 동일한 최신 엔진 및 부품 설치
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libltdl-dev libffi-dev libssl-dev python3-dev python3-pip openjdk-17-jdk zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake
+          pip install --user --upgrade buildozer cython==0.29.33 virtualenv
 
-      - name: Upload APK
+      - name: 2. 안드로이드 APK 압축 (Buildozer)
+        run: |
+          export PATH=$PATH:~/.local/bin
+          buildozer android debug
+
+      - name: 3. 완성된 APK 파일 배달
         uses: actions/upload-artifact@v4
         with:
-          name: App-APK
-          path: ${{ steps.buildozer.outputs.filename }}
+          name: Master-App-APK
+          path: bin/*.apk
