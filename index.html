@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>스마트 현장 출입 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .chip-checkbox:checked + label { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: 700; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-xl border border-slate-100 p-6 space-y-6">
+        <div class="text-center">
+            <span id="badge" class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600">인식 중...</span>
+            <h1 id="titleText" class="text-2xl font-extrabold text-slate-800 mt-2">현장 출입 등록</h1>
+            <p class="text-sm text-red-500 font-bold mt-2 bg-red-50 py-2 rounded-lg">📸 문자창이 열리면 [카메라] 아이콘을 눌러<br>반드시 사진을 첨부하세요!</p>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label id="nameLabel" class="block text-sm font-bold text-slate-700 mb-1">성명 (또는 인솔자명)</label>
+                <input type="text" id="workerName" placeholder="실명을 입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-lg font-bold focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+
+            <div>
+                <label id="contentLabel" class="block text-sm font-bold text-slate-700 mb-1">내용 입력</label>
+                <input type="text" id="contentInput" placeholder="입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+
+            <div id="healthSection">
+                <label class="block text-sm font-bold text-slate-700 mb-2">고위험군 체크 (중복 선택 가능)</label>
+                <div class="flex flex-wrap gap-2">
+                    <input type="checkbox" id="h1" value="고혈압" class="chip-checkbox hidden">
+                    <label for="h1" class="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 cursor-pointer transition-colors">고혈압</label>
+                    
+                    <input type="checkbox" id="h2" value="당뇨" class="chip-checkbox hidden">
+                    <label for="h2" class="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 cursor-pointer transition-colors">당뇨</label>
+                    
+                    <input type="checkbox" id="h3" value="심혈관" class="chip-checkbox hidden">
+                    <label for="h3" class="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 cursor-pointer transition-colors">심혈관질환</label>
+                    
+                    <input type="checkbox" id="h4" value="고령자" class="chip-checkbox hidden">
+                    <label for="h4" class="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-600 cursor-pointer transition-colors">고령(55세 이상)</label>
+                </div>
+            </div>
+
+            <button onclick="generateAndSend()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-extrabold text-lg hover:bg-slate-800 shadow-lg active:scale-[0.98] transition-transform">
+                문자창 열기 (사진첨부 단계)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const project = urlParams.get('project') || "미지정";
+        const type = urlParams.get('type') || "출입";
+        const mode = urlParams.get('mode') || "작업";
+        const manager = urlParams.get('manager') || "";
+
+        // 화면 동적 세팅
+        const badge = document.getElementById('badge');
+        badge.innerText = `${project} · ${mode === '상시' ? '🚨통제구역' : '👷일반작업'}`;
+        badge.className = mode === '상시' ? "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700" : "px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700";
+        document.getElementById('titleText').innerText = type === '출입' ? "출입 등록" : "퇴실 등록";
+
+        if(mode === '상시') {
+            document.getElementById('contentLabel').innerText = "출입 사유 (필수)";
+            document.getElementById('contentInput').placeholder = "예: 밸브 점검, 누전 확인";
+            document.getElementById('healthSection').style.display = 'none'; // 상시모드는 건강체크 숨김
+        } else {
+            document.getElementById('contentLabel').innerText = "오늘의 공정 (수기)";
+            document.getElementById('contentInput').placeholder = "예: 3층 철근 배근";
+        }
+
+        function generateAndSend() {
+            const worker = document.getElementById('workerName').value.trim();
+            const content = document.getElementById('contentInput').value.trim() || "-";
+            
+            if(!worker) return alert("성명(인솔자명)을 입력해주세요.");
+            if(mode === '상시' && content === "-") return alert("출입 사유를 입력해주세요.");
+            if(!manager) return alert("QR 코드 오류: 관리자 번호가 없습니다.");
+
+            let health = "해당없음";
+            if(mode === '작업') {
+                const healthArr = [];
+                document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => healthArr.push(cb.value));
+                if(healthArr.length > 0) health = healthArr.join(', ');
+            }
+
+            // 💡 완벽한 보안 식별자 조립
+            const smsBody = `[#@SYS_QR_${mode}${type}@#] 현장: ${project} / 이름: ${worker} / 내용: ${content} / 건강: ${health}`;
+            window.location.href = `sms:${manager}?body=${encodeURIComponent(smsBody)}`;
+        }
+    </script>
+</body>
+</html>
