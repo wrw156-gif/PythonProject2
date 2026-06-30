@@ -29,10 +29,10 @@
                 <span id="locationText">현장 정보 로딩 중...</span>
             </div>
             
-            <div class="mt-4 flex items-center space-x-2.5 bg-amber-50 border border-amber-200 p-3 rounded-2xl text-left break-keep">
-                <span class="text-xl">📸</span>
-                <p class="text-xs text-amber-800 font-bold leading-relaxed">
-                    [필독] 다음 단계인 문자 전송창이 열리면, 반드시 <span class="text-amber-600 underline">카메라 아이콘</span>을 눌러 본인 사진을 첨부하여 발송하세요!
+            <div class="mt-4 flex items-center space-x-3 bg-amber-50 border border-amber-200 p-3.5 rounded-2xl text-left break-keep">
+                <span class="text-2xl">📸</span>
+                <p class="text-xs text-amber-900 font-bold leading-relaxed">
+                    <span class="text-amber-700 font-black">[필독]</span> 다음 단계인 문자 전송창이 열리면, 작업에 필요한 <span class="underline decoration-2 text-amber-700">이수증을 첨부</span>하여 발송하세요. (사진은 1장만 등록 가능하며, 해당사항이 없으면 첨부 없이 전송하셔도 됩니다.)
                 </p>
             </div>
         </div>
@@ -80,12 +80,17 @@
 
         <div id="restrictModeForm" class="space-y-4 hidden restrict-theme">
             <div>
-                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">인솔자명 (출입통제자)</label>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">출입자 성명 (본인 이름)</label>
+                <input type="text" id="r_name" placeholder="실명을 입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-base font-bold outline-none focus:bg-white focus:ring-2 focus:ring-red-500 transition-all">
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">인솔자명 (출입통제 책임자)</label>
                 <input type="text" id="r_guide" placeholder="인솔 책임자 성명을 입력하세요" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-base font-bold outline-none focus:bg-white focus:ring-2 focus:ring-red-500 transition-all">
             </div>
 
             <div>
-                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">입퇴실 일시 (자동 고정)</label>
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">입퇴실 인증 시각 (보안 자동 잠금)</label>
                 <div class="relative">
                     <input type="text" id="r_datetime_display" readonly class="w-full bg-slate-100 border border-slate-200 px-4 py-3.5 rounded-2xl text-base font-bold text-slate-500 cursor-not-allowed">
                     <span class="absolute right-4 top-3.5 text-slate-400">🔒</span>
@@ -93,8 +98,8 @@
             </div>
 
             <div>
-                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">출입 사유 (필수)</label>
-                <input type="text" id="r_reason" placeholder="예: 메인 변전실 정기 정검" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-sm font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-red-500 transition-all">
+                <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">보안구역 출입 사유 (필수)</label>
+                <input type="text" id="r_reason" placeholder="예: 발전기실 소방점검" class="w-full bg-slate-50 border border-slate-200 px-4 py-3.5 rounded-2xl text-sm font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-red-500 transition-all">
             </div>
         </div>
 
@@ -108,8 +113,6 @@
         const project = urlParams.get('project') || "미지정 장소";
         const building = urlParams.get('building') || "";
         const type = urlParams.get('type') || "출입";
-        
-        // 💡 [수정] 깨질 우려가 있는 한글 대신 영문 식별자로 완벽한 기계 매칭 유도
         const mode = urlParams.get('mode') || "work"; 
         const manager = urlParams.get('manager') || "";
 
@@ -123,6 +126,7 @@
             document.getElementById('w_task').value = "";
             document.getElementById('w_health_other').value = "";
             document.getElementById('w_health_other').classList.add('hidden');
+            document.getElementById('r_name').value = "";
             document.getElementById('r_guide').value = "";
             document.getElementById('r_reason').value = "";
             document.querySelectorAll('.chip-checkbox').forEach(cb => cb.checked = false);
@@ -138,7 +142,6 @@
 
             titleText.innerText = type === '출입' ? "현장 출입 등록" : "현장 퇴실 등록";
 
-            // 💡 [수정] 영문 코드 분기 처리 매싱 완료
             if (mode === 'restrict') {
                 bodyBg.className = "bg-rose-50/50 min-h-screen flex items-center justify-center p-4 transition-colors duration-500";
                 badge.innerText = "🚨 상시 통제구역";
@@ -149,7 +152,7 @@
                 submitBtn.className = "w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-red-200 active:scale-[0.98] transition-all duration-200";
             } else {
                 bodyBg.className = "bg-blue-50/50 min-h-screen flex items-center justify-center p-4 transition-colors duration-500";
-                badge.innerText = " Republic of Safety";
+                badge.innerText = "👷 일반 작업";
                 badge.className = "px-3 py-1.5 rounded-full text-xs font-black bg-blue-600 text-white shadow-sm";
                 document.getElementById('locationText').innerText = `🚧 현장: ${project}`;
                 document.getElementById('workModeForm').classList.remove('hidden');
@@ -177,9 +180,6 @@
             }
         }
 
-        // 문자 문자열 조합단은 기존 한글 체계 유지하여 관리자 파싱 안정성 영속 보장
-        def_mode = (mode === 'restrict') ? "상시" : "작업";
-
         function submitForm() {
             if(!manager) return alert("QR 코드 정보에 수신인 관리자 번호가 유실되었습니다.");
             let mmsBody = "";
@@ -200,18 +200,23 @@
                 if(otherHealth) healthArr.push(otherHealth);
                 const healthFinal = healthArr.length > 0 ? healthArr.join(', ') : "이상없음";
 
-                mmsBody = `[#@SYS_QR_작업${type}@#] 장소:${project} / 일시:${datetimeVal} / 공정:${task} / 건강:${healthFinal}`;
+                // 💡 백그라운드 파싱 정규식(이름:, 내용:) 규격 일치화
+                mmsBody = `[#@SYS_QR_작업${type}@#] 장소:${project} / 이름:${name} / 내용:${task} (시간:${datetimeVal}) / 건강:${healthFinal}`;
             } 
             else if (mode === 'restrict') {
+                const r_name = document.getElementById('r_name').value.trim();
                 const guide = document.getElementById('r_guide').value.trim();
                 const reason = document.getElementById('r_reason').value.trim();
                 const currentSystemTime = formatSystemDateTime();
                 
+                if(!r_name) return alert("출입자 성명을 입력하십시오.");
                 if(!guide) return alert("책임 인솔자 성명을 입력하십시오.");
                 if(!reason) return alert("보안구역 출입 사유를 상세히 입력하십시오.");
 
                 const buildPart = building ? `건물:${building} / ` : "";
-                mmsBody = `[#@SYS_QR_상시${type}@#] ${buildPart}장소:${project} / 일시:${currentSystemTime} / 사유:${reason} / 인솔:${guide}`;
+                
+                // 💡 상시 모드용 복합 데이터 결합 구조 (기존 백그라운드 파싱 구조 완벽 호환)
+                mmsBody = `[#@SYS_QR_상시${type}@#] ${buildPart}장소:${project} / 이름:${r_name} (인솔:${guide}) / 내용:${reason} (시간:${currentSystemTime}) / 건강:상시출입통제`;
             }
 
             window.location.href = `sms:${manager}?body=${encodeURIComponent(mmsBody)}`;
